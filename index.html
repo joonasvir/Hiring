@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Spectrum</title>
+<style>
+  @font-face {
+    font-family: 'Kalice';
+    src: url('fonts/Kalice-Trial-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'Selecta';
+    src: url('fonts/Selecta-Light.otf') format('opentype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'Selecta';
+    src: url('fonts/Selecta-Regular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'Selecta';
+    src: url('fonts/Selecta-Medium.otf') format('opentype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f5f2ed;
+    --fg: #1a1a18;
+    --fg-muted: #8a8780;
+    --line: #c8c4bc;
+    --line-dark: #a8a49c;
+    --surface: #ffffff;
+    --surface-hover: #faf9f7;
+    --border: #e2dfd9;
+    --accent: #c44d2b;
+    --shadow: 0 2px 12px rgba(26,26,24,0.08), 0 1px 3px rgba(26,26,24,0.06);
+    --shadow-lg: 0 8px 32px rgba(26,26,24,0.12), 0 2px 8px rgba(26,26,24,0.08);
+  }
+
+  html { font-size: 16px; }
+
+  body {
+    font-family: 'Selecta', sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    -webkit-font-smoothing: antialiased;
+    cursor: default;
+    overflow-x: hidden;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 4rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards;
+  }
+
+  .header h1 {
+    font-family: 'Kalice', serif;
+    font-weight: 400;
+    font-size: 1.5rem;
+    letter-spacing: 0.01em;
+    color: var(--fg);
+    margin-bottom: 0.35rem;
+  }
+
+  .header p {
+    font-size: 0.7rem;
+    color: var(--fg-muted);
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .spectrum-container {
+    width: 100%;
+    max-width: 900px;
+    position: relative;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.15s forwards;
+  }
+
+  /* --- Track --- */
+  .track-area {
+    position: relative;
+    padding: 0 0;
+    cursor: crosshair;
+  }
+
+  .track {
+    width: 100%;
+    height: 1px;
+    background: var(--line);
+    position: relative;
+    margin-top: 60px;
+  }
+
+  .track::before,
+  .track::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    border: 1px solid var(--line-dark);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--bg);
+  }
+
+  .track::before { left: 0; }
+  .track::after { right: -6px; }
+
+  /* --- Ticks --- */
+  .ticks {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+  }
+
+  .tick {
+    position: absolute;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .tick-line {
+    width: 1px;
+    height: 10px;
+    background: var(--line-dark);
+    margin-top: -5px;
+  }
+
+  .tick-label {
+    font-size: 0.6rem;
+    font-weight: 400;
+    color: var(--fg-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-top: 14px;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .tick:first-child { left: 0%; }
+  .tick:nth-child(2) { left: 50%; }
+  .tick:last-child { left: 100%; }
+
+  /* --- Role spans stacked above the track --- */
+  .spans-container {
+    position: relative;
+    width: 100%;
+    min-height: 10px;
+    margin-bottom: 16px;
+  }
+
+  .role-row {
+    position: relative;
+    width: 100%;
+    height: 36px;
+    margin-bottom: 6px;
+  }
+
+  .role-span {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    transition: box-shadow 0.2s ease, opacity 0.2s ease;
+    opacity: 0;
+    animation: spanIn 0.35s ease forwards;
+  }
+
+  @keyframes spanIn {
+    from { opacity: 0; transform: scaleX(0.7); }
+    to { opacity: 1; transform: scaleX(1); }
+  }
+
+  .role-span-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    opacity: 0.12;
+    pointer-events: none;
+  }
+
+  .role-span-border {
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    border: 1.5px solid;
+    opacity: 0.3;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .role-span:hover .role-span-border,
+  .role-span.is-selected .role-span-border {
+    opacity: 0.6;
+  }
+
+  .role-span.is-dragging {
+    opacity: 0.85;
+    box-shadow: 0 4px 16px rgba(26,26,24,0.15);
+  }
+
+  .role-span-label {
+    position: relative;
+    z-index: 2;
+    font-family: 'Kalice', serif;
+    font-size: 0.8rem;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    pointer-events: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 12px;
+  }
+
+  /* --- Drag handles on edges --- */
+  .role-handle {
+    position: absolute;
+    top: 0;
+    width: 10px;
+    height: 100%;
+    cursor: ew-resize;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .role-handle-left {
+    left: -2px;
+    border-radius: 6px 0 0 6px;
+  }
+
+  .role-handle-right {
+    right: -2px;
+    border-radius: 0 6px 6px 0;
+  }
+
+  .role-handle::after {
+    content: '';
+    width: 2px;
+    height: 14px;
+    border-radius: 1px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .role-span:hover .role-handle::after,
+  .role-span.is-selected .role-handle::after,
+  .role-span.is-dragging .role-handle::after {
+    opacity: 0.5;
+  }
+
+  /* Middle grab area */
+  .role-grab {
+    position: absolute;
+    top: 0;
+    left: 10px;
+    right: 10px;
+    height: 100%;
+    cursor: grab;
+    z-index: 4;
+  }
+
+  .role-grab:active { cursor: grabbing; }
+
+  /* --- Detail Panel --- */
+  .panel-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    display: none;
+  }
+
+  .panel-overlay.is-open { display: block; }
+
+  .panel {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    width: 360px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-lg);
+    z-index: 501;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  .panel.is-open {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: all;
+  }
+
+  .panel-color-bar {
+    width: 32px;
+    height: 3px;
+    border-radius: 2px;
+    margin-bottom: 1rem;
+  }
+
+  .panel label {
+    display: block;
+    font-size: 0.6rem;
+    font-weight: 500;
+    color: var(--fg-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+  }
+
+  .panel input,
+  .panel textarea {
+    font-family: 'Selecta', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 300;
+    color: var(--fg);
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.55rem 0.7rem;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s ease;
+  }
+
+  .panel input:focus,
+  .panel textarea:focus {
+    border-color: var(--line-dark);
+  }
+
+  .panel textarea {
+    resize: vertical;
+    min-height: 60px;
+    line-height: 1.5;
+  }
+
+  .panel-field + .panel-field { margin-top: 0.9rem; }
+
+  .panel-range {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .panel-range-label {
+    font-size: 0.6rem;
+    color: var(--fg-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+
+  .panel-range-visual {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.6rem;
+    color: var(--fg-muted);
+    font-weight: 300;
+  }
+
+  .panel-range-bar {
+    width: 80px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .panel-range-fill {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    border-radius: 2px;
+  }
+
+  .panel-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .btn-delete {
+    font-family: 'Selecta', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 400;
+    color: var(--fg-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.3rem 0;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: color 0.2s ease;
+  }
+
+  .btn-delete:hover { color: var(--accent); }
+
+  .add-bar {
+    margin-top: 2.5rem;
+    display: flex;
+    justify-content: center;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.3s forwards;
+  }
+
+  .btn-add {
+    font-family: 'Selecta', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 400;
+    color: var(--fg-muted);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 0.5rem 1.2rem;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+  }
+
+  .btn-add:hover {
+    color: var(--fg);
+    border-color: var(--line-dark);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+
+  .hint {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 2rem;
+    font-size: 0.6rem;
+    color: var(--fg-muted);
+    font-weight: 300;
+    letter-spacing: 0.03em;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.6s forwards;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Team Spectrum</h1>
+  <p>Map roles across disciplines</p>
+</div>
+
+<div class="spectrum-container">
+  <div class="track-area" id="trackArea">
+    <div class="spans-container" id="spansContainer"></div>
+    <div class="track" id="track">
+      <div class="ticks">
+        <div class="tick"><div class="tick-line"></div><div class="tick-label">Engineering</div></div>
+        <div class="tick"><div class="tick-line"></div><div class="tick-label">Product</div></div>
+        <div class="tick"><div class="tick-line"></div><div class="tick-label">Brand / Motion</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="add-bar">
+  <button class="btn-add" id="btnAdd">+ Add role</button>
+</div>
+
+<div class="hint">Drag edges to resize &middot; Drag middle to move &middot; Click to edit</div>
+
+<div class="panel-overlay" id="panelOverlay"></div>
+<div class="panel" id="panel">
+  <div class="panel-color-bar" id="panelColorBar"></div>
+  <div class="panel-field">
+    <label for="panelName">Name</label>
+    <input type="text" id="panelName" placeholder="Role name" autocomplete="off" spellcheck="false">
+  </div>
+  <div class="panel-field">
+    <label for="panelNotes">Notes</label>
+    <textarea id="panelNotes" placeholder="Details, responsibilities, context..." spellcheck="false"></textarea>
+  </div>
+  <div class="panel-range">
+    <span class="panel-range-label" id="panelRangeLabel">25% – 50%</span>
+    <div class="panel-range-visual">
+      <div class="panel-range-bar">
+        <div class="panel-range-fill" id="panelRangeFill"></div>
+      </div>
+    </div>
+  </div>
+  <div class="panel-actions">
+    <button class="btn-delete" id="btnDelete">Remove</button>
+  </div>
+</div>
+
+<script>
+const COLORS = [
+  '#2b5ea6','#c44d2b','#3a8a6e','#9b6b2f',
+  '#7b4fa0','#c4562b','#2b7ea6','#6b8a3a'
+];
+let colorIdx = 0;
+function nextColor() {
+  const c = COLORS[colorIdx % COLORS.length];
+  colorIdx++;
+  return c;
+}
+
+const trackArea = document.getElementById('trackArea');
+const track = document.getElementById('track');
+const spansContainer = document.getElementById('spansContainer');
+const panel = document.getElementById('panel');
+const panelOverlay = document.getElementById('panelOverlay');
+const panelName = document.getElementById('panelName');
+const panelNotes = document.getElementById('panelNotes');
+const panelColorBar = document.getElementById('panelColorBar');
+const panelRangeLabel = document.getElementById('panelRangeLabel');
+const panelRangeFill = document.getElementById('panelRangeFill');
+const btnDelete = document.getElementById('btnDelete');
+const btnAdd = document.getElementById('btnAdd');
+
+let roles = [];
+let selectedRole = null;
+let drag = null; // { role, type: 'move'|'left'|'right', startX, startLeft, startRight }
+
+const MIN_SPAN = 5; // minimum width in %
+
+function getTrackWidth() {
+  return track.getBoundingClientRect().width;
+}
+
+function getTrackLeft() {
+  return track.getBoundingClientRect().left;
+}
+
+function pxToPct(px) {
+  return (px / getTrackWidth()) * 100;
+}
+
+function zoneLabel(pct) {
+  if (pct < 33) return 'Eng';
+  if (pct < 66) return 'Product';
+  return 'Brand';
+}
+
+function renderRole(role) {
+  role.el.style.left = role.left + '%';
+  role.el.style.width = (role.right - role.left) + '%';
+}
+
+function createRole(name, left, right, color, notes) {
+  const role = {
+    id: Date.now() + Math.random(),
+    name: name || 'New Role',
+    left: left,
+    right: right,
+    color: color || nextColor(),
+    notes: notes || '',
+    el: null,
+    rowEl: null,
+    labelEl: null
+  };
+
+  // Row
+  const row = document.createElement('div');
+  row.className = 'role-row';
+
+  // Span element
+  const span = document.createElement('div');
+  span.className = 'role-span';
+  span.style.left = left + '%';
+  span.style.width = (right - left) + '%';
+
+  // Fill
+  const fill = document.createElement('div');
+  fill.className = 'role-span-fill';
+  fill.style.background = role.color;
+
+  // Border
+  const border = document.createElement('div');
+  border.className = 'role-span-border';
+  border.style.borderColor = role.color;
+
+  // Label
+  const label = document.createElement('div');
+  label.className = 'role-span-label';
+  label.style.color = role.color;
+  label.textContent = role.name;
+
+  // Left handle
+  const handleL = document.createElement('div');
+  handleL.className = 'role-handle role-handle-left';
+  handleL.style.setProperty('--hc', role.color);
+  handleL.addEventListener('pointerdown', (e) => startDrag(e, role, 'left'));
+
+  // Right handle
+  const handleR = document.createElement('div');
+  handleR.className = 'role-handle role-handle-right';
+  handleR.addEventListener('pointerdown', (e) => startDrag(e, role, 'right'));
+
+  // Grab zone (middle)
+  const grab = document.createElement('div');
+  grab.className = 'role-grab';
+  grab.addEventListener('pointerdown', (e) => startDrag(e, role, 'move'));
+
+  // Click middle area to open panel
+  grab.addEventListener('click', (e) => {
+    if (drag && drag.moved) return;
+    e.stopPropagation();
+    selectRole(role);
+  });
+
+  span.appendChild(fill);
+  span.appendChild(border);
+  span.appendChild(label);
+  span.appendChild(handleL);
+  span.appendChild(handleR);
+  span.appendChild(grab);
+  row.appendChild(span);
+  spansContainer.appendChild(row);
+
+  // Style handles
+  handleL.style.cssText += `--handle-color: ${role.color}`;
+  handleR.style.cssText += `--handle-color: ${role.color}`;
+
+  const handleStyle = document.createElement('style');
+  const uid = 'h' + Math.random().toString(36).slice(2, 8);
+  handleL.classList.add(uid);
+  handleR.classList.add(uid);
+  handleStyle.textContent = `.${uid}::after { background: ${role.color}; }`;
+  document.head.appendChild(handleStyle);
+
+  role.el = span;
+  role.rowEl = row;
+  role.labelEl = label;
+  roles.push(role);
+  return role;
+}
+
+function startDrag(e, role, type) {
+  if (e.button !== 0) return;
+  e.preventDefault();
+  e.stopPropagation();
+  drag = {
+    role,
+    type,
+    startX: e.clientX,
+    startLeft: role.left,
+    startRight: role.right,
+    moved: false,
+    pointerId: e.pointerId
+  };
+  role.el.classList.add('is-dragging');
+  role.el.setPointerCapture(e.pointerId);
+}
+
+document.addEventListener('pointermove', (e) => {
+  if (!drag) return;
+  const dx = e.clientX - drag.startX;
+  const dPct = pxToPct(dx);
+  const role = drag.role;
+
+  if (Math.abs(dx) > 2) drag.moved = true;
+
+  if (drag.type === 'move') {
+    let newLeft = drag.startLeft + dPct;
+    let newRight = drag.startRight + dPct;
+    const span = newRight - newLeft;
+    if (newLeft < 0) { newLeft = 0; newRight = span; }
+    if (newRight > 100) { newRight = 100; newLeft = 100 - span; }
+    role.left = newLeft;
+    role.right = newRight;
+  } else if (drag.type === 'left') {
+    let newLeft = drag.startLeft + dPct;
+    newLeft = Math.max(0, Math.min(role.right - MIN_SPAN, newLeft));
+    role.left = newLeft;
+  } else if (drag.type === 'right') {
+    let newRight = drag.startRight + dPct;
+    newRight = Math.min(100, Math.max(role.left + MIN_SPAN, newRight));
+    role.right = newRight;
+  }
+
+  renderRole(role);
+
+  if (selectedRole && selectedRole.id === role.id) {
+    updatePanelRange(role);
+  }
+});
+
+document.addEventListener('pointerup', () => {
+  if (drag) {
+    drag.role.el.classList.remove('is-dragging');
+    drag = null;
+    saveState();
+  }
+});
+
+function selectRole(role) {
+  if (selectedRole) {
+    selectedRole.el.classList.remove('is-selected');
+  }
+  selectedRole = role;
+  role.el.classList.add('is-selected');
+
+  panelName.value = role.name;
+  panelNotes.value = role.notes;
+  panelColorBar.style.background = role.color;
+  updatePanelRange(role);
+
+  panel.classList.add('is-open');
+  panelOverlay.classList.add('is-open');
+  setTimeout(() => panelName.focus(), 100);
+}
+
+function updatePanelRange(role) {
+  const l = Math.round(role.left);
+  const r = Math.round(role.right);
+  panelRangeLabel.textContent = zoneLabel((role.left + role.right) / 2) + '  ·  ' + l + '% – ' + r + '%';
+  panelRangeFill.style.left = l + '%';
+  panelRangeFill.style.width = (r - l) + '%';
+  panelRangeFill.style.background = role.color;
+}
+
+function closePanel() {
+  if (selectedRole) {
+    selectedRole.el.classList.remove('is-selected');
+  }
+  selectedRole = null;
+  panel.classList.remove('is-open');
+  panelOverlay.classList.remove('is-open');
+}
+
+panelName.addEventListener('input', () => {
+  if (!selectedRole) return;
+  selectedRole.name = panelName.value;
+  selectedRole.labelEl.textContent = panelName.value || 'Untitled';
+  saveState();
+});
+
+panelNotes.addEventListener('input', () => {
+  if (!selectedRole) return;
+  selectedRole.notes = panelNotes.value;
+  saveState();
+});
+
+panelOverlay.addEventListener('click', closePanel);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closePanel();
+});
+
+btnDelete.addEventListener('click', () => {
+  if (!selectedRole) return;
+  selectedRole.rowEl.remove();
+  roles = roles.filter(r => r.id !== selectedRole.id);
+  closePanel();
+  saveState();
+});
+
+btnAdd.addEventListener('click', () => {
+  // Find a gap or place at a reasonable position
+  const mid = 50;
+  const span = 20;
+  let left = mid - span / 2;
+  let right = mid + span / 2;
+
+  // Offset if overlapping existing roles
+  const attempts = [0, 25, -25, 50, -50, 75, -75];
+  for (const offset of attempts) {
+    const tl = left + offset;
+    const tr = right + offset;
+    if (tl >= 0 && tr <= 100) {
+      const overlap = roles.some(r =>
+        !(tr <= r.left || tl >= r.right)
+      );
+      if (!overlap || roles.length === 0) {
+        left = tl;
+        right = tr;
+        break;
+      }
+    }
+  }
+  left = Math.max(0, left);
+  right = Math.min(100, right);
+
+  const role = createRole('', left, right);
+  selectRole(role);
+  saveState();
+});
+
+// Double-click track to add
+track.addEventListener('dblclick', (e) => {
+  const rect = track.getBoundingClientRect();
+  const clickPct = ((e.clientX - rect.left) / rect.width) * 100;
+  const halfSpan = 10;
+  let left = Math.max(0, clickPct - halfSpan);
+  let right = Math.min(100, clickPct + halfSpan);
+  const role = createRole('', left, right);
+  selectRole(role);
+  saveState();
+});
+
+trackArea.addEventListener('click', (e) => {
+  if (e.target === trackArea || e.target === track || e.target.closest('.ticks')) {
+    closePanel();
+  }
+});
+
+// --- Persistence ---
+const STORAGE_KEY = 'team-spectrum-roles';
+
+function saveState() {
+  const data = roles.map(r => ({
+    name: r.name,
+    left: r.left,
+    right: r.right,
+    color: r.color,
+    notes: r.notes
+  }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (Array.isArray(data) && data.length > 0) {
+        data.forEach(d => createRole(d.name, d.left, d.right, d.color, d.notes));
+        return;
+      }
+    }
+  } catch (e) {}
+  // Default roles
+  createRole('Role 1', 5, 35);
+  createRole('Role 2', 38, 62);
+  createRole('Role 3', 65, 95);
+}
+
+loadState();
+</script>
+
+</body>
+</html>
