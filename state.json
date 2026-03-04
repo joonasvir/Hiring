@@ -1,26 +1,26 @@
 [
   {
-    "name": "Role 1",
-    "left": 5,
-    "right": 35,
+    "name": "Design Engineer",
+    "left": 0,
+    "right": 55.760403401167565,
     "color": "#2b5ea6",
-    "notes": "Strong engineering foundation with product sensibility",
+    "notes": "Think: Janum Trivedi. High taste, high attention to detail, burning desire for exploring, designing and shipping new AI-assisted interaction models.",
     "isReference": false
   },
   {
-    "name": "Role 2",
-    "left": 38,
-    "right": 62,
+    "name": "Product Designer",
+    "left": 15.004005600850057,
+    "right": 76.20448865390584,
     "color": "#c44d2b",
-    "notes": "Core product designer who bridges eng and brand",
+    "notes": "Great foundational product thinking, stellar visual design skills, burning desire to learn more about AI tools and expand their spectrum towards the left. Needs to be able to ship directly to prod on product and/or website in the first 2 months.",
     "isReference": false
   },
   {
-    "name": "Role 3",
-    "left": 65,
-    "right": 95,
+    "name": "Brand Design Lead",
+    "left": 42.536055178211974,
+    "right": 99.98771077518772,
     "color": "#3a8a6e",
-    "notes": "Brand and motion focus with product design chops",
+    "notes": "Good product and brand thinker, ability to think in motion and lead external motion designers across 2D/3D. Willigness to become increasingly AI enabled",
     "isReference": false
   }
 ]
