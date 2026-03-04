@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Team Spectrum</title>
+<title>Design Hiring</title>
 <style>
   @font-face {
     font-family: 'Kalice';
@@ -87,16 +87,17 @@
   }
 
   .header p {
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     color: var(--fg-muted);
     font-weight: 300;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    max-width: 480px;
+    line-height: 1.45;
   }
 
   .spectrum-container {
-    width: 100%;
-    max-width: 900px;
+    width: 90vw;
+    max-width: none;
     position: relative;
     opacity: 0;
     animation: fadeUp 0.6s ease 0.15s forwards;
@@ -299,6 +300,45 @@
 
   .role-grab:active { cursor: grabbing; }
 
+  /* --- Reference markers (smaller, dashed) --- */
+  .role-row.is-reference {
+    height: 24px;
+    margin-bottom: 4px;
+  }
+
+  .role-span.is-reference {
+    border-radius: 4px;
+  }
+
+  .role-span.is-reference .role-span-fill {
+    opacity: 0.06;
+    border-radius: 4px;
+  }
+
+  .role-span.is-reference .role-span-border {
+    border-radius: 4px;
+    border-style: dashed;
+    border-width: 1px;
+    opacity: 0.25;
+  }
+
+  .role-span.is-reference:hover .role-span-border,
+  .role-span.is-reference.is-selected .role-span-border {
+    opacity: 0.45;
+  }
+
+  .role-span.is-reference .role-span-label {
+    font-size: 0.65rem;
+    font-family: 'Selecta', sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    padding: 0 8px;
+  }
+
+  .role-span.is-reference .role-handle::after {
+    height: 10px;
+  }
+
   /* --- Detail Panel --- */
   .panel-overlay {
     position: fixed;
@@ -445,6 +485,7 @@
     margin-top: 2.5rem;
     display: flex;
     justify-content: center;
+    gap: 0.75rem;
     opacity: 0;
     animation: fadeUp 0.6s ease 0.3s forwards;
   }
@@ -492,8 +533,8 @@
 <body>
 
 <div class="header">
-  <h1>Team Spectrum</h1>
-  <p>Map roles across disciplines</p>
+  <h1>Design Hiring</h1>
+  <p>Mapping roles across disciplines. Every new hire should span a good distance on this spectrum, and be able to expand it over time.</p>
 </div>
 
 <div class="spectrum-container">
@@ -502,7 +543,7 @@
     <div class="track" id="track">
       <div class="ticks">
         <div class="tick"><div class="tick-line"></div><div class="tick-label">Engineering</div></div>
-        <div class="tick"><div class="tick-line"></div><div class="tick-label">Product</div></div>
+        <div class="tick"><div class="tick-line"></div><div class="tick-label">Product Design</div></div>
         <div class="tick"><div class="tick-line"></div><div class="tick-label">Brand / Motion</div></div>
       </div>
     </div>
@@ -511,6 +552,7 @@
 
 <div class="add-bar">
   <button class="btn-add" id="btnAdd">+ Add role</button>
+  <button class="btn-add" id="btnAddRef">+ Add reference</button>
 </div>
 
 <div class="hint">Drag edges to resize &middot; Drag middle to move &middot; Click to edit</div>
@@ -563,6 +605,7 @@ const panelRangeLabel = document.getElementById('panelRangeLabel');
 const panelRangeFill = document.getElementById('panelRangeFill');
 const btnDelete = document.getElementById('btnDelete');
 const btnAdd = document.getElementById('btnAdd');
+const btnAddRef = document.getElementById('btnAddRef');
 
 let roles = [];
 let selectedRole = null;
@@ -593,14 +636,15 @@ function renderRole(role) {
   role.el.style.width = (role.right - role.left) + '%';
 }
 
-function createRole(name, left, right, color, notes) {
+function createRole(name, left, right, color, notes, isReference) {
   const role = {
     id: Date.now() + Math.random(),
-    name: name || 'New Role',
+    name: name || (isReference ? 'New Reference' : 'New Role'),
     left: left,
     right: right,
     color: color || nextColor(),
     notes: notes || '',
+    isReference: !!isReference,
     el: null,
     rowEl: null,
     labelEl: null
@@ -608,11 +652,11 @@ function createRole(name, left, right, color, notes) {
 
   // Row
   const row = document.createElement('div');
-  row.className = 'role-row';
+  row.className = 'role-row' + (role.isReference ? ' is-reference' : '');
 
   // Span element
   const span = document.createElement('div');
-  span.className = 'role-span';
+  span.className = 'role-span' + (role.isReference ? ' is-reference' : '');
   span.style.left = left + '%';
   span.style.width = (right - left) + '%';
 
@@ -648,12 +692,7 @@ function createRole(name, left, right, color, notes) {
   grab.className = 'role-grab';
   grab.addEventListener('pointerdown', (e) => startDrag(e, role, 'move'));
 
-  // Click middle area to open panel
-  grab.addEventListener('click', (e) => {
-    if (drag && drag.moved) return;
-    e.stopPropagation();
-    selectRole(role);
-  });
+  // Tap middle area to open panel (handled in pointerup)
 
   span.appendChild(fill);
   span.appendChild(border);
@@ -735,7 +774,13 @@ document.addEventListener('pointermove', (e) => {
 document.addEventListener('pointerup', () => {
   if (drag) {
     drag.role.el.classList.remove('is-dragging');
+    const wasMoved = drag.moved;
+    const wasMove = drag.type === 'move';
+    const role = drag.role;
     drag = null;
+    if (!wasMoved && wasMove) {
+      selectRole(role);
+    }
     saveState();
   }
 });
@@ -832,6 +877,34 @@ btnAdd.addEventListener('click', () => {
   saveState();
 });
 
+// Add reference button
+btnAddRef.addEventListener('click', () => {
+  const mid = 50;
+  const span = 15;
+  let left = mid - span / 2;
+  let right = mid + span / 2;
+  const attempts = [0, 25, -25, 50, -50, 75, -75];
+  for (const offset of attempts) {
+    const tl = left + offset;
+    const tr = right + offset;
+    if (tl >= 0 && tr <= 100) {
+      const overlap = roles.some(r =>
+        !(tr <= r.left || tl >= r.right)
+      );
+      if (!overlap || roles.length === 0) {
+        left = tl;
+        right = tr;
+        break;
+      }
+    }
+  }
+  left = Math.max(0, left);
+  right = Math.min(100, right);
+  const role = createRole('', left, right, null, '', true);
+  selectRole(role);
+  saveState();
+});
+
 // Double-click track to add
 track.addEventListener('dblclick', (e) => {
   const rect = track.getBoundingClientRect();
@@ -859,7 +932,8 @@ function saveState() {
     left: r.left,
     right: r.right,
     color: r.color,
-    notes: r.notes
+    notes: r.notes,
+    isReference: r.isReference
   }));
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
@@ -870,7 +944,7 @@ function loadState() {
     if (raw) {
       const data = JSON.parse(raw);
       if (Array.isArray(data) && data.length > 0) {
-        data.forEach(d => createRole(d.name, d.left, d.right, d.color, d.notes));
+        data.forEach(d => createRole(d.name, d.left, d.right, d.color, d.notes, d.isReference));
         return;
       }
     }
