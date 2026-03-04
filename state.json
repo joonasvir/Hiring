@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Role 1",
+    "left": 5,
+    "right": 35,
+    "color": "#2b5ea6",
+    "notes": "Strong engineering foundation with product sensibility",
+    "isReference": false
+  },
+  {
+    "name": "Role 2",
+    "left": 38,
+    "right": 62,
+    "color": "#c44d2b",
+    "notes": "Core product designer who bridges eng and brand",
+    "isReference": false
+  },
+  {
+    "name": "Role 3",
+    "left": 65,
+    "right": 95,
+    "color": "#3a8a6e",
+    "notes": "Brand and motion focus with product design chops",
+    "isReference": false
+  }
+]

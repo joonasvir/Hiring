@@ -678,6 +678,7 @@
   <div class="add-bar">
     <button class="btn-add" id="btnAdd">+ Add role</button>
     <button class="btn-add" id="btnAddRef">+ Add reference</button>
+    <button class="btn-add" onclick="exportState()">Export state</button>
   </div>
 </div>
 
@@ -1088,20 +1089,53 @@ function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-function loadState() {
+function loadRoles(data) {
+  data.forEach(d => createRole(d.name, d.left, d.right, d.color, d.notes, d.isReference));
+}
+
+async function loadState() {
+  // 1. Try localStorage first (user's own edits on this domain)
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const data = JSON.parse(raw);
       if (Array.isArray(data) && data.length > 0) {
-        data.forEach(d => createRole(d.name, d.left, d.right, d.color, d.notes, d.isReference));
+        loadRoles(data);
         return;
       }
     }
   } catch (e) {}
+
+  // 2. Try fetching state.json (shared/deployed state)
+  try {
+    const res = await fetch('state.json');
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        loadRoles(data);
+        saveState();
+        return;
+      }
+    }
+  } catch (e) {}
+
+  // 3. Fallback defaults
   createRole('Role 1', 5, 35, null, 'Strong engineering foundation with product sensibility');
   createRole('Role 2', 38, 62, null, 'Core product designer who bridges eng and brand');
   createRole('Role 3', 65, 95, null, 'Brand and motion focus with product design chops');
+}
+
+function exportState() {
+  const data = roles.map(r => ({
+    name: r.name, left: r.left, right: r.right,
+    color: r.color, notes: r.notes, isReference: r.isReference
+  }));
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'state.json';
+  a.click();
 }
 
 loadState();
